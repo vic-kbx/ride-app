@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background px-4 py-16 sm:py-24">
-      <section className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+    <main className="relative min-h-screen overflow-hidden bg-background px-4 py-16 sm:py-24">
+      <div className="moving-green-gradient pointer-events-none absolute inset-0" />
+      <div className="moving-green-gradient-soft pointer-events-none absolute inset-0" />
+      <section className="relative z-10 mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
         <div className="space-y-6">
           <p className="text-sm font-medium text-primary">GreenRide for Kigali</p>
           <h1 className="max-w-xl text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
@@ -16,7 +18,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
-              <Link href="/login">Get Started</Link>
+              <Link href="/login">Book a Ride</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/about">Learn More</Link>
@@ -37,17 +39,24 @@ export default function Home() {
             <rect x="44" y="92" width="270" height="16" rx="8" fill="var(--secondary)" />
             <rect x="44" y="118" width="210" height="16" rx="8" fill="var(--secondary)" />
             <rect x="44" y="164" width="432" height="152" rx="16" fill="var(--background)" />
-            <circle cx="152" cy="275" r="42" fill="none" stroke="var(--primary)" strokeWidth="10" />
-            <circle cx="308" cy="275" r="42" fill="none" stroke="var(--primary)" strokeWidth="10" />
+            <circle cx="162" cy="282" r="34" fill="none" stroke="var(--primary)" strokeWidth="10" />
+            <circle cx="336" cy="282" r="34" fill="none" stroke="var(--primary)" strokeWidth="10" />
             <path
-              d="M152 275 L214 212 H274 L308 275 M214 212 L192 176"
+              d="M196 282h90a34 34 0 0 0-34-34h-34l24-34h56"
               fill="none"
               stroke="var(--primary)"
               strokeWidth="10"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="280" cy="166" r="12" fill="var(--primary)" />
+            <path
+              d="M296 248h40l28 28M216 248l-18-28h-36"
+              fill="none"
+              stroke="var(--primary)"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
       </section>

@@ -1,7 +1,7 @@
 "use client";
 
-import { Bike } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { MotorbikeIcon } from "@/components/icons/motorbike-icon";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,8 +23,9 @@ import {
 import {
   BIKE_MOVEMENT_PATHS,
   BUILT_IN_DESTINATIONS,
+  DUMMY_DRIVER_USERNAMES,
+  type Destination,
   MOCK_USER_LOCATION,
-  NEARBY_BIKES,
 } from "@/lib/mock-data";
 
 type BookingData = {
@@ -40,13 +41,18 @@ const initialBookingData: BookingData = {
 type BikeState = {
   id: string;
   name: string;
+  pathId: string;
   latitude: number;
   longitude: number;
   segmentIndex: number;
   progress: number;
-  speed: number;
+  speed: number; // segment progress per second
   heading: number;
 };
+
+const RIDER_COUNT = 20;
+const MOVEMENT_PATHS = Object.entries(BIKE_MOVEMENT_PATHS);
+const MAX_COMBO_RESULTS = 8;
 
 function toRadians(value: number) {
   return (value * Math.PI) / 180;
@@ -81,25 +87,52 @@ function interpolatePathPoint(
   ];
 }
 
+function pseudoRandom(seed: number) {
+  const x = Math.sin(seed * 9999.17) * 10000.93;
+  return x - Math.floor(x);
+}
+
+function createInitialRiderStates(): BikeState[] {
+  return Array.from({ length: RIDER_COUNT }, (_, index) => {
+    const [pathId, path] = MOVEMENT_PATHS[index % MOVEMENT_PATHS.length];
+    const randA = pseudoRandom(index + 1);
+    const randB = pseudoRandom(index + 101);
+
+    const segmentIndex = Math.floor(randA * path.length) % path.length;
+    const progress = randB;
+    const from = path[segmentIndex];
+    const to = path[(segmentIndex + 1) % path.length];
+    const [longitude, latitude] = interpolatePathPoint(from, to, progress);
+
+    return {
+      id: `rider-${index + 1}`,
+      name: DUMMY_DRIVER_USERNAMES[index % DUMMY_DRIVER_USERNAMES.length],
+      pathId,
+      latitude,
+      longitude,
+      segmentIndex,
+      progress,
+      speed: 0.07 + randA * 0.08,
+      heading: calculateHeading(from, to),
+    };
+  });
+}
+
+function destinationLabel(destination: Destination) {
+  return `${destination.name} - ${destination.street}, ${destination.city}`;
+}
+
 export default function BookPage() {
   const [bookingData, setBookingData] = useState<BookingData>(initialBookingData);
   const [destinationQuery, setDestinationQuery] = useState("");
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showBookedPopup, setShowBookedPopup] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(MOCK_USER_LOCATION);
-  const [bikeStates, setBikeStates] = useState<BikeState[]>(
-    NEARBY_BIKES.map((bike, index) => ({
-      id: bike.id,
-      name: bike.name,
-      latitude: bike.latitude,
-      longitude: bike.longitude,
-      segmentIndex: 0,
-      progress: 0,
-      speed: 0.08 + (index % 3) * 0.015,
-      heading: 0,
-    }))
+  const [bikeStates, setBikeStates] = useState<BikeState[]>(() =>
+    createInitialRiderStates()
   );
 
   const selectedDestination = useMemo(
@@ -108,6 +141,17 @@ export default function BookPage() {
       null,
     [selectedDestinationId]
   );
+
+  const filteredDestinations = useMemo(() => {
+    const query = destinationQuery.trim().toLowerCase();
+    if (!query) {
+      return BUILT_IN_DESTINATIONS.slice(0, MAX_COMBO_RESULTS);
+    }
+
+    return BUILT_IN_DESTINATIONS.filter((destination) =>
+      destinationLabel(destination).toLowerCase().includes(query)
+    ).slice(0, MAX_COMBO_RESULTS);
+  }, [destinationQuery]);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -139,16 +183,22 @@ export default function BookPage() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    let lastTime = performance.now();
+    let frameId = 0;
+
+    const animate = (time: number) => {
+      const deltaSeconds = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+
       setBikeStates((prevStates) =>
         prevStates.map((bike) => {
-          const path = BIKE_MOVEMENT_PATHS[bike.id];
+          const path = BIKE_MOVEMENT_PATHS[bike.pathId];
           if (!path || path.length < 2) {
             return bike;
           }
 
           let segmentIndex = bike.segmentIndex;
-          let progress = bike.progress + bike.speed;
+          let progress = bike.progress + bike.speed * deltaSeconds;
           while (progress >= 1) {
             progress -= 1;
             segmentIndex = (segmentIndex + 1) % path.length;
@@ -168,9 +218,13 @@ export default function BookPage() {
           };
         })
       );
-    }, 1200);
 
-    return () => window.clearInterval(timer);
+      frameId = window.requestAnimationFrame(animate);
+    };
+
+    frameId = window.requestAnimationFrame(animate);
+
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   const routeCoordinates = useMemo<[number, number][]>(() => {
@@ -255,30 +309,57 @@ export default function BookPage() {
                 <label htmlFor="destination" className="text-sm font-medium">
                   Destination
                 </label>
-                <Input
-                  id="destination"
-                  list="rwanda-destinations"
-                  placeholder="Search built-in destinations"
-                  value={destinationQuery}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setDestinationQuery(value);
-                    const match = BUILT_IN_DESTINATIONS.find(
-                      (destination) =>
-                        `${destination.name} - ${destination.street}, ${destination.city}` ===
-                        value
-                    );
-                    setSelectedDestinationId(match?.id ?? null);
-                  }}
-                />
-                <datalist id="rwanda-destinations">
-                  {BUILT_IN_DESTINATIONS.map((destination) => (
-                    <option
-                      key={destination.id}
-                      value={`${destination.name} - ${destination.street}, ${destination.city}`}
-                    />
-                  ))}
-                </datalist>
+                <div className="relative">
+                  <Input
+                    id="destination"
+                    role="combobox"
+                    aria-expanded={isDestinationOpen}
+                    aria-controls="destination-combobox-list"
+                    placeholder="Search built-in destinations"
+                    value={destinationQuery}
+                    onFocus={() => setIsDestinationOpen(true)}
+                    onBlur={() => {
+                      window.setTimeout(() => setIsDestinationOpen(false), 120);
+                    }}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setDestinationQuery(value);
+                      setIsDestinationOpen(true);
+
+                      const exactMatch = BUILT_IN_DESTINATIONS.find(
+                        (destination) => destinationLabel(destination) === value
+                      );
+                      setSelectedDestinationId(exactMatch?.id ?? null);
+                    }}
+                  />
+                  {isDestinationOpen ? (
+                    <div
+                      id="destination-combobox-list"
+                      className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
+                    >
+                      {filteredDestinations.length > 0 ? (
+                        filteredDestinations.map((destination) => (
+                          <button
+                            key={destination.id}
+                            type="button"
+                            className="w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => {
+                              setDestinationQuery(destinationLabel(destination));
+                              setSelectedDestinationId(destination.id);
+                              setIsDestinationOpen(false);
+                            }}
+                          >
+                            {destinationLabel(destination)}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-2 py-2 text-sm text-muted-foreground">
+                          No matching destinations.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -313,6 +394,16 @@ export default function BookPage() {
 
         <div className="h-[420px] w-full overflow-hidden rounded-xl border bg-background shadow-sm lg:h-full lg:min-h-[540px]">
           <Map center={mapCenter} zoom={13}>
+            {Object.entries(BIKE_MOVEMENT_PATHS).map(([roadId, coordinates]) => (
+              <MapRoute
+                key={roadId}
+                id={`road-${roadId}`}
+                coordinates={coordinates}
+                color="rgba(34, 197, 94, 0.28)"
+                width={2}
+                opacity={0.7}
+              />
+            ))}
             <MapRoute coordinates={routeCoordinates} color="#16a34a" width={4} opacity={0.85} />
 
             <MapMarker longitude={currentLocation.longitude} latitude={currentLocation.latitude}>
@@ -338,7 +429,7 @@ export default function BookPage() {
               >
                 <MarkerContent>
                   <div className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-emerald-600 text-primary-foreground shadow-lg">
-                    <Bike className="size-3.5" />
+                    <MotorbikeIcon className="size-3.5" />
                   </div>
                 </MarkerContent>
                 <MarkerTooltip>Destination</MarkerTooltip>
@@ -362,7 +453,7 @@ export default function BookPage() {
               >
                 <MarkerContent>
                   <div className="rounded-full border-2 border-white bg-primary p-1 text-primary-foreground shadow-lg">
-                    <Bike className="size-4" />
+                    <MotorbikeIcon className="size-4" />
                   </div>
                 </MarkerContent>
                 <MarkerTooltip>{bike.name}</MarkerTooltip>
@@ -370,7 +461,7 @@ export default function BookPage() {
                   <div className="space-y-1">
                     <p className="font-medium text-foreground">{bike.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Moving on Kigali streets
+                      Moving on Kigali streets (live)
                     </p>
                   </div>
                 </MarkerPopup>

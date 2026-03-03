@@ -1,6 +1,7 @@
 "use client";
 
-import { Bike, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import { MotorbikeIcon } from "@/components/icons/motorbike-icon";
 import {
   Card,
   CardContent,
@@ -51,7 +52,9 @@ export default function MotoriderDashboardPage() {
               <CardTitle className="text-2xl">{item.value}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">{item.delta}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                {item.delta}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -86,19 +89,127 @@ export default function MotoriderDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Bike className="size-4 text-primary" />
+              <MotorbikeIcon className="size-4 text-primary" />
               Recent Activity
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {recentActivity.map((activity) => (
-              <div key={activity} className="rounded-md border bg-background/60 p-3 text-sm">
+              <div
+                key={activity}
+                className="rounded-md border bg-background/60 p-3 text-sm"
+              >
                 {activity}
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ride Volume (Last 7 Days)</CardTitle>
+          <CardDescription>
+            Analytics trend for dashboard preview.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border bg-background/60 p-4">
+            <svg
+              viewBox="0 0 640 220"
+              className="h-48 w-full"
+              role="img"
+              aria-label="Ride volume chart"
+            >
+              <line
+                x1="40"
+                y1="180"
+                x2="610"
+                y2="180"
+                stroke="var(--border)"
+                strokeWidth="2"
+              />
+              <line
+                x1="40"
+                y1="30"
+                x2="40"
+                y2="180"
+                stroke="var(--border)"
+                strokeWidth="2"
+              />
+
+              <polyline
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points="60,160 140,138 220,148 300,112 380,126 460,88 540,96"
+              />
+
+              <circle cx="60" cy="160" r="5" fill="var(--primary)" />
+              <circle cx="140" cy="138" r="5" fill="var(--primary)" />
+              <circle cx="220" cy="148" r="5" fill="var(--primary)" />
+              <circle cx="300" cy="112" r="5" fill="var(--primary)" />
+              <circle cx="380" cy="126" r="5" fill="var(--primary)" />
+              <circle cx="460" cy="88" r="5" fill="var(--primary)" />
+              <circle cx="540" cy="96" r="5" fill="var(--primary)" />
+
+              <text x="52" y="200" fontSize="12" fill="var(--muted-foreground)">
+                Mon
+              </text>
+              <text
+                x="132"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Tue
+              </text>
+              <text
+                x="212"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Wed
+              </text>
+              <text
+                x="292"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Thu
+              </text>
+              <text
+                x="372"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Fri
+              </text>
+              <text
+                x="452"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Sat
+              </text>
+              <text
+                x="532"
+                y="200"
+                fontSize="12"
+                fill="var(--muted-foreground)"
+              >
+                Sun
+              </text>
+            </svg>
+          </div>
+        </CardContent>
+      </Card>
     </MotoriderShell>
   );
 }

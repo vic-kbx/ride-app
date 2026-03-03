@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,18 @@ function SiteNavbar() {
   };
 
   return (
-    <header className="border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <nav className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-        <Link href="/about" className="text-sm font-semibold">
-          GreenRide
+    <header className="sticky top-0 z-50 border-b bg-transparent backdrop-blur-md supports-backdrop-filter:bg-background/35">
+      <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/greenride-logo.svg"
+            alt="GreenRide logo"
+            width={24}
+            height={24}
+            className="rounded-sm"
+            priority
+          />
+          <span className="text-sm font-semibold">GreenRide</span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
