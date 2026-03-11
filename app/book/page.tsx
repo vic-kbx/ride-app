@@ -77,7 +77,7 @@ function calculateHeading(from: [number, number], to: [number, number]) {
 function interpolatePathPoint(
   from: [number, number],
   to: [number, number],
-  progress: number
+  progress: number,
 ): [number, number] {
   const [fromLng, fromLat] = from;
   const [toLng, toLat] = to;
@@ -123,23 +123,27 @@ function destinationLabel(destination: Destination) {
 }
 
 export default function BookPage() {
-  const [bookingData, setBookingData] = useState<BookingData>(initialBookingData);
+  const [bookingData, setBookingData] =
+    useState<BookingData>(initialBookingData);
   const [destinationQuery, setDestinationQuery] = useState("");
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<
+    string | null
+  >(null);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showBookedPopup, setShowBookedPopup] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(MOCK_USER_LOCATION);
   const [bikeStates, setBikeStates] = useState<BikeState[]>(() =>
-    createInitialRiderStates()
+    createInitialRiderStates(),
   );
 
   const selectedDestination = useMemo(
     () =>
-      BUILT_IN_DESTINATIONS.find((destination) => destination.id === selectedDestinationId) ??
-      null,
-    [selectedDestinationId]
+      BUILT_IN_DESTINATIONS.find(
+        (destination) => destination.id === selectedDestinationId,
+      ) ?? null,
+    [selectedDestinationId],
   );
 
   const filteredDestinations = useMemo(() => {
@@ -149,7 +153,7 @@ export default function BookPage() {
     }
 
     return BUILT_IN_DESTINATIONS.filter((destination) =>
-      destinationLabel(destination).toLowerCase().includes(query)
+      destinationLabel(destination).toLowerCase().includes(query),
     ).slice(0, MAX_COMBO_RESULTS);
   }, [destinationQuery]);
 
@@ -178,7 +182,7 @@ export default function BookPage() {
           pickup: `Current Location: ${MOCK_USER_LOCATION.latitude.toFixed(4)}, ${MOCK_USER_LOCATION.longitude.toFixed(4)}`,
         }));
       },
-      { enableHighAccuracy: true, timeout: 6000 }
+      { enableHighAccuracy: true, timeout: 6000 },
     );
   }, []);
 
@@ -206,7 +210,11 @@ export default function BookPage() {
 
           const from = path[segmentIndex];
           const to = path[(segmentIndex + 1) % path.length];
-          const [longitude, latitude] = interpolatePathPoint(from, to, progress);
+          const [longitude, latitude] = interpolatePathPoint(
+            from,
+            to,
+            progress,
+          );
 
           return {
             ...bike,
@@ -216,7 +224,7 @@ export default function BookPage() {
             latitude,
             heading: calculateHeading(from, to),
           };
-        })
+        }),
       );
 
       frameId = window.requestAnimationFrame(animate);
@@ -290,7 +298,9 @@ export default function BookPage() {
         <Card className="py-0">
           <CardHeader className="gap-1 border-b py-6">
             <CardTitle className="text-2xl">Book A Ride</CardTitle>
-            <CardDescription>Choose your route and confirm pickup details.</CardDescription>
+            <CardDescription>
+              Choose your route and confirm pickup details.
+            </CardDescription>
           </CardHeader>
           <CardContent className="py-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -298,11 +308,7 @@ export default function BookPage() {
                 <label htmlFor="pickup" className="text-sm font-medium">
                   Pickup Location
                 </label>
-                <Input
-                  id="pickup"
-                  readOnly
-                  value={bookingData.pickup}
-                />
+                <Input id="pickup" readOnly value={bookingData.pickup} />
               </div>
 
               <div className="space-y-2">
@@ -327,7 +333,8 @@ export default function BookPage() {
                       setIsDestinationOpen(true);
 
                       const exactMatch = BUILT_IN_DESTINATIONS.find(
-                        (destination) => destinationLabel(destination) === value
+                        (destination) =>
+                          destinationLabel(destination) === value,
                       );
                       setSelectedDestinationId(exactMatch?.id ?? null);
                     }}
@@ -344,7 +351,9 @@ export default function BookPage() {
                             type="button"
                             className="w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
                             onClick={() => {
-                              setDestinationQuery(destinationLabel(destination));
+                              setDestinationQuery(
+                                destinationLabel(destination),
+                              );
                               setSelectedDestinationId(destination.id);
                               setIsDestinationOpen(false);
                             }}
@@ -371,7 +380,10 @@ export default function BookPage() {
                   type="datetime-local"
                   value={bookingData.rideTime}
                   onChange={(event) =>
-                    setBookingData((prev) => ({ ...prev, rideTime: event.target.value }))
+                    setBookingData((prev) => ({
+                      ...prev,
+                      rideTime: event.target.value,
+                    }))
                   }
                 />
               </div>
@@ -394,26 +406,38 @@ export default function BookPage() {
 
         <div className="h-[420px] w-full overflow-hidden rounded-xl border bg-background shadow-sm lg:h-full lg:min-h-[540px]">
           <Map center={mapCenter} zoom={13}>
-            {Object.entries(BIKE_MOVEMENT_PATHS).map(([roadId, coordinates]) => (
-              <MapRoute
-                key={roadId}
-                id={`road-${roadId}`}
-                coordinates={coordinates}
-                color="rgba(34, 197, 94, 0.28)"
-                width={2}
-                opacity={0.7}
-              />
-            ))}
-            <MapRoute coordinates={routeCoordinates} color="#16a34a" width={4} opacity={0.85} />
+            {Object.entries(BIKE_MOVEMENT_PATHS).map(
+              ([roadId, coordinates]) => (
+                <MapRoute
+                  key={roadId}
+                  id={`road-${roadId}`}
+                  coordinates={coordinates}
+                  color="rgba(34, 197, 94, 0.28)"
+                  width={2}
+                  opacity={0.7}
+                />
+              ),
+            )}
+            <MapRoute
+              coordinates={routeCoordinates}
+              color="#16a34a"
+              width={4}
+              opacity={0.85}
+            />
 
-            <MapMarker longitude={currentLocation.longitude} latitude={currentLocation.latitude}>
+            <MapMarker
+              longitude={currentLocation.longitude}
+              latitude={currentLocation.latitude}
+            >
               <MarkerContent>
                 <div className="size-4 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
               </MarkerContent>
               <MarkerTooltip>Pickup (Current Location)</MarkerTooltip>
               <MarkerPopup>
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground">Your current pickup point</p>
+                  <p className="font-medium text-foreground">
+                    Fawe Girls School Gisozi
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {currentLocation.latitude.toFixed(4)},{" "}
                     {currentLocation.longitude.toFixed(4)}
@@ -435,7 +459,9 @@ export default function BookPage() {
                 <MarkerTooltip>Destination</MarkerTooltip>
                 <MarkerPopup>
                   <div className="space-y-1">
-                    <p className="font-medium text-foreground">{selectedDestination.name}</p>
+                    <p className="font-medium text-foreground">
+                      {selectedDestination.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {selectedDestination.street}, {selectedDestination.city}
                     </p>
@@ -477,7 +503,10 @@ export default function BookPage() {
             <p className="text-sm font-medium">
               Ride is booked, wait for the bike.
             </p>
-            <Button className="mt-4 w-full" onClick={() => setShowBookedPopup(false)}>
+            <Button
+              className="mt-4 w-full"
+              onClick={() => setShowBookedPopup(false)}
+            >
               Close
             </Button>
           </div>

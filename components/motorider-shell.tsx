@@ -6,6 +6,7 @@ import { useEffect, type ReactNode } from "react";
 import { Clock3, Compass, LayoutDashboard, MapPinned } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const navItems = [
   { href: "/motorider/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -35,6 +36,7 @@ function MotoriderShell({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-screen bg-linear-to-br from-background via-background to-muted/40 px-4 py-8 sm:py-12">
+      <Toaster position="top-right" richColors closeButton />
       <section className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="h-fit rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-4">
